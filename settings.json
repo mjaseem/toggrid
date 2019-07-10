@@ -1,0 +1,58 @@
+{
+    "api-token": "***REMOVED***",
+    "wid": 0,
+    "tasks": [
+        {
+            "description": "Toggle Client",
+            "tags": [
+                "testTag1"
+            ],
+        },
+        {
+            "description": "Time Entry 2",
+            "tags": [
+                "testTag1",
+                "testTag3"
+            ],
+        },
+        {
+            "description": "Time Entry 2",
+            "tags": [
+                "testTag1",
+                "testTag3"
+            ],
+        },
+        {
+            "description": "Time Entry 2",
+            "tags": [
+                "testTag1",
+                "testTag3"
+            ],
+        },
+        {
+            "description": "Time Entry 2",
+            "tags": [
+                "testTag1",
+                "testTag3"
+            ],
+        },
+        {
+            "description": "Time Entry 2",
+            "tags": [
+                "testTag1",
+                "testTag3"
+            ],
+        },
+        {
+            "description": "Time Entry 7",
+            "tags": [
+                "testTag1",
+                "testTag3"
+            ],
+        },
+    ],
+    "colors": [
+        "#962752",
+        "#dab827"
+    ]
+}
