@@ -1,8 +1,4 @@
-createMethod = function () {
-    console.log("Called method")
-}
-
-getSettings = function () {
+function getSettings() {
     // self.settings = null
     // if (self.settings == null) {
     //     (async function (self) {
@@ -66,57 +62,62 @@ getSettings = function () {
                     "testTag3"
                 ],
             },
-        ]
+        ],
+        "colors": ["#962752", "#dab827", "#f26e6b", "#171717", "#375359", "#29e5af", "#7b47ba"]
     }
 }
 
 currentTimeEntry = null;
 
-getTasks = function () {
+function getTasks () {
     return getSettings().tasks;
 }
 
-createTiles = function () {
+function createTiles() {
     const wrapper = document.getElementById('wrapper');
     const tasks = getTasks();
     const colors = getSettings().colors;
-    tasks.forEach(task => {
+    for (let i = 0; i < tasks.length; ++i) {
+        let task = tasks[i];
         const tile = document.createElement('div');
+        tile.style.backgroundColor = colors[i % colors.length] //Just in case we don't have enough colors
         tile.innerHTML = task.description;
         let buttonEnabled = true;
         tile.onclick = (e) => {
             if (buttonEnabled) {
                 buttonEnabled = false;
-                toggleTimeEntry(task).then(_ => buttonEnabled = true); //Debounce
+                toggleTimeEntry(task, tile).then(_ => buttonEnabled = true); //Debounce
             }
         }
         wrapper.appendChild(tile);
-    });
+    }
 }
 
-toggleTimeEntry = function (task) {
+function toggleTimeEntry(task, tile) {
     let promise;
     if (currentTimeEntry != null && currentTimeEntry.description === task.description) {
         promise = stopTimeEntry(currentTimeEntry.id);
         currentTimeEntry = null;
+        tile.style.filter = "";
     } else {
         promise = startTask(task);
+        tile.style.filter = "grayscale(100%)";
     }
     return promise;
 }
 
-authHead = function () {
+function authHead() {
     return "Basic " + btoa(getSettings()["api-token"] + ":api_token");
 }
 
-defaultHeaders = function () {
+function defaultHeaders() {
     return {
         "Content-Type": "application/json",
         "Authorization": authHead()
     }
 }
 
-startTask = function (task) {
+function startTask(task) {
     const request = { "time_entry": { "description": task.description, "tags": task.tags, "created_with": "js" } };
     return fetch("https://www.toggl.com/api/v8/time_entries/start", {
         method: 'POST',
@@ -135,7 +136,7 @@ startTask = function (task) {
     });
 }
 
-stopTimeEntry = function (id) {
+function stopTimeEntry(id) {
     return fetch("https://www.toggl.com/api/v8/time_entries/" + id + "/stop", {
         method: 'PUT',
         headers: defaultHeaders()
@@ -148,17 +149,13 @@ stopTimeEntry = function (id) {
     });
 }
 
-getCurrentTimeEntry = async function () {
+function getCurrentTimeEntry() {
     return fetch("https://www.toggl.com/api/v8/time_entries/current", {
         headers: defaultHeaders()
     }).then(resp => resp.json());
 }
 
-getTimeEntry = function (id) {
-    fetch("https://www.toggl.com/api/v8/time_entries/" + id)
-}
-
-stopCurrentEntry = function () {
+function stopCurrentEntry() {
     return currentTimeEntry()
         .then(resp => {
             if (resp.data != null) {
@@ -167,7 +164,7 @@ stopCurrentEntry = function () {
         });
 }
 
-polling = function (fn, predicate, delay, name) {
+function polling(fn, predicate, delay, name) {
     const self = this;
     self.cancelled = false;
     console.log("Started polling " + name);
@@ -191,14 +188,13 @@ polling = function (fn, predicate, delay, name) {
     scheduleNext();
 }
 
-//TODO color scheme
 //TODO display time
 //TODO change color of running task
 //TODO handle inconsistency
-fetchSettings =
-    window.onload = function () {
-        createTiles();
-        getCurrentTimeEntry().then(entry => {
-            currentTimeEntry = entry.data;
-        })
-    }
+//TODO fullscreen on android
+window.onload = function () {
+    createTiles();
+    getCurrentTimeEntry().then(entry => {
+        currentTimeEntry = entry.data;
+    })
+}
