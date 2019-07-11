@@ -45,15 +45,17 @@ function getSettings() {
                     "testTag3"
                 ],
             },
+
         ],
         "colors": ["#962752", "#dab827", "#f26e6b", "#171717", "#375359", "#29e5af", "#7b47ba"]
     }
 }
 
-currentTimeEntry = null;
+currentTask = null;
+tasks = getSettings().tasks;
 
-function getTasks () {
-    return getSettings().tasks;
+function getTasks() {
+    return tasks;
 }
 
 function createTiles() {
@@ -61,32 +63,69 @@ function createTiles() {
     const tasks = getTasks();
     const colors = getSettings().colors;
     for (let i = 0; i < tasks.length; ++i) {
-        let task = tasks[i];
-        const tile = document.createElement('div');
-        tile.style.backgroundColor = colors[i % colors.length] //Just in case we don't have enough colors
-        tile.innerHTML = task.description;
-        let buttonEnabled = true;
-        tile.onclick = (e) => {
-            if (buttonEnabled) {
-                buttonEnabled = false;
-                toggleTimeEntry(task, tile).then(_ => buttonEnabled = true); //Debounce
-            }
-        }
+        const task = tasks[i];
+        const tile = createTile(tasks[i], colors[i % colors.length]);//Just in case we don't have enough colors
+        task.tile = tile;
         wrapper.appendChild(tile);
     }
 }
 
-function toggleTimeEntry(task, tile) {
-    let promise;
-    if (currentTimeEntry != null && currentTimeEntry.description === task.description) {
-        promise = stopTimeEntry(currentTimeEntry.id);
-        currentTimeEntry = null;
-        tile.style.filter = "";
-    } else {
-        promise = startTask(task);
-        tile.style.filter = "grayscale(100%)";
-    }
-    return promise;
+function createTile(task, color) {
+    const tile = document.createElement('div');
+    const desc = document.createElement('div');
+    desc.className = "desc"
+    const dur = document.createElement('div');
+    dur.className = "dur"
+    tile.style.backgroundColor = color;
+    desc.innerText = task.description;
+    tile.appendChild(desc);
+    tile.appendChild(dur);
+    tile.onclick = debounce(() => toggleTask(task))
+    return tile;
+}
+
+function debounce(fnReturningPromise) { //This will lead to error if called without promise
+    let clickEnabled = true;
+    return function () {
+        if (clickEnabled) {
+            clickEnabled = false;
+            fnReturningPromise().then(_ => clickEnabled = true);
+        }
+    };
+}
+
+function toggleTask(task) {
+    stopSync();
+    return getCurrentTimeEntry()
+        .then(function (resp) {
+            const data = resp.data;
+            if (!consistentState(data)) {
+                console.log("Inconsistent state when clicked. Ignoring.")
+                return;
+            }
+            if (data != null && task.description == data.description) {
+                stopTile(task.tile)
+                return stopTimeEntry(data.id);
+            } else {
+                if (currentTask != null) {
+                    stopTile(currentTask.tile);
+                }
+                currentTask = task;
+                startTile(task.tile)
+                return startTask(task)
+            }
+        }).then(_ => startSync());
+}
+
+function consistentState(data) {
+    if (data == null && currentTask == null) return true;
+    if (data != null && currentTask != null && data.description == currentTask.description) return true;
+    return false //TODO extract equality to separate function which can be modified
+}
+
+function updateDuration(tile, dur) {
+    const durNode = tile.getElementsByClassName("dur")[0];
+    durNode.innerText = dur;
 }
 
 function authHead() {
@@ -101,14 +140,18 @@ function defaultHeaders() {
 }
 
 function startTask(task) {
-    const request = { "time_entry": { "description": task.description, "tags": task.tags, "created_with": "js" } };
+    const timeEntry = { "time_entry": { "description": task.description, "tags": task.tags, "created_with": "js" } };
+    return startTimeEntry(timeEntry);
+}
+
+function startTimeEntry(timeEntry) {
     return fetch("https://www.toggl.com/api/v8/time_entries/start", {
         method: 'POST',
         headers: defaultHeaders(),
-        body: JSON.stringify(request)
+        body: JSON.stringify(timeEntry)
     }).then(function (resp) {
         if (resp.status !== 200) {
-            alert("Got " + resp.status + " while starting time entry")
+            alert("Got " + resp.status + " while starting time entry");
             return;
         }
         return resp.json();
@@ -138,15 +181,6 @@ function getCurrentTimeEntry() {
     }).then(resp => resp.json());
 }
 
-function stopCurrentEntry() {
-    return currentTimeEntry()
-        .then(resp => {
-            if (resp.data != null) {
-                stopTimeEntry(resp.data.id);
-            }
-        });
-}
-
 function polling(fn, predicate, delay, name) {
     const self = this;
     self.cancelled = false;
@@ -171,13 +205,70 @@ function polling(fn, predicate, delay, name) {
     scheduleNext();
 }
 
-//TODO display time
-//TODO change color of running task
-//TODO handle inconsistency
-//TODO fullscreen on android
+
+function startSync() {
+    syncJob = new polling(sync, _ => true, 1000, "sync");
+}
+function stopSync() {
+    syncJob.cancel();
+}
+
+//TODO handle short period inconsistencies
+//TODO more responsive to input
+//TODO polish the UI
+//TODO js equals null !== or !=?
+//TODO check duplicate tasks in settings
+
 window.onload = function () {
     createTiles();
-    getCurrentTimeEntry().then(entry => {
-        currentTimeEntry = entry.data;
-    })
+    // sync().then(_ => clicksDisabled = false);//Hacky solution to prevent operation till synced once
+    startSync();
 }
+
+
+function sync() {
+    return getCurrentTimeEntry()
+        .then(function (currentTimeEntry) {
+            currentData = currentTimeEntry.data;
+            if (currentTask !== null && (currentData == null || currentData.description !== currentTask.description)) {
+                stopTile(currentTask.tile);
+                currentTask = null;
+            }
+            if (currentData !== null) {
+                const matchingTask = findMatchingTask(currentData);
+                if (matchingTask !== undefined) {
+                    startTile(matchingTask.tile);
+                    currentTask = matchingTask;
+                    updateDuration(currentTask.tile, calculateDuration(currentData));
+                }
+            }
+
+        })
+}
+
+function stopTile(tile) {
+    tile.style.filter = "";
+    updateDuration(tile, "");
+}
+
+function findMatchingTask(data) {
+    return tasks.filter(task => task.description == data.description)[0];
+}
+function startTile(tile) {
+    tile.style.filter = "grayscale(100%)";
+    updateDuration(tile, "0:0:0")
+}
+
+function calculateDuration(data) {
+    const diff = Date.now() - Date.parse(data.start);
+
+    let msec = diff;
+    const hh = Math.floor(msec / 1000 / 60 / 60);
+    msec -= hh * 1000 * 60 * 60;
+    const mm = Math.floor(msec / 1000 / 60);
+    msec -= mm * 1000 * 60;
+    const ss = Math.floor(msec / 1000);
+    return hh + ":" + mm + ":" + ss; //TODO display in hh:mm:ss format
+}
+
+
