@@ -18,35 +18,28 @@ function getSettings() {
                 ],
             },
             {
-                "description": "Time Entry 2",
+                "description": "Time Entry 3",
                 "tags": [
                     "testTag1",
                     "testTag3"
                 ],
             },
             {
-                "description": "Time Entry 2",
+                "description": "Time Entry 4",
                 "tags": [
                     "testTag1",
                     "testTag3"
                 ],
             },
             {
-                "description": "Time Entry 2",
+                "description": "Time Entry 5",
                 "tags": [
                     "testTag1",
                     "testTag3"
                 ],
             },
             {
-                "description": "Time Entry 2",
-                "tags": [
-                    "testTag1",
-                    "testTag3"
-                ],
-            },
-            {
-                "description": "Time Entry 7",
+                "description": "Time Entry 6",
                 "tags": [
                     "testTag1",
                     "testTag3"
