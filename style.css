@@ -14,11 +14,8 @@ html, body {
     background-color: #1b1b1b;
     padding: 1em;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 18px;
+    font-size: 25px;
     color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 @media screen and (orientation:landscape) {
