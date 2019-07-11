@@ -1,15 +1,5 @@
 function getSettings() {
-    // self.settings = null
-    // if (self.settings == null) {
-    //     (async function (self) {
-    //         await fetch("settings.json")
-    //             .then(resp => {
-    //                 return resp.json()
-    //             })
-    //     })();
 
-    // }
-    // return self.settings TODO
     return {
         "api-token": "***REMOVED***",
         "wid": 0,
