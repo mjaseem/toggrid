@@ -55,7 +55,7 @@ function toggleTask(task) {
     return getCurrentTimeEntry()
         .then(function (resp) {
             const data = resp.data;
-            if (!consistentState(data)) {
+            if (data != null && currentTask == null && data.description == task.description) {
                 console.log("Inconsistent state when clicked. Ignoring.")
                 return;
             }
@@ -71,12 +71,6 @@ function toggleTask(task) {
                 return startTask(task)
             }
         }).then(_ => startSync());
-}
-
-function consistentState(data) {
-    if (data == null && currentTask == null) return true;
-    if (data != null && currentTask != null && data.description == currentTask.description) return true;
-    return false //TODO extract equality to separate function which can be modified
 }
 
 function updateDuration(tile, dur) {
