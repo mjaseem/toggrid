@@ -202,7 +202,7 @@ function stopTile(tile) {
 }
 
 function findMatchingTask(data) {
-    return tasks.filter(task => task.description == data.description)[0];
+    return getTasks().filter(task => task.description == data.description)[0];
 }
 function startTile(tile) {
     tile.style.filter = "grayscale(100%)";
