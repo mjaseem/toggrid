@@ -1,61 +1,17 @@
 function getSettings() {
+    return settings;
 
-    return {
-        "api-token": "***REMOVED***",
-        "wid": 0,
-        "tasks": [
-            {
-                "description": "Toggle Client",
-                "tags": [
-                    "testTag1"
-                ],
-            },
-            {
-                "description": "Time Entry 2",
-                "tags": [
-                    "testTag1",
-                    "testTag3"
-                ],
-            },
-            {
-                "description": "Time Entry 3",
-                "tags": [
-                    "testTag1",
-                    "testTag3"
-                ],
-            },
-            {
-                "description": "Time Entry 4",
-                "tags": [
-                    "testTag1",
-                    "testTag3"
-                ],
-            },
-            {
-                "description": "Time Entry 5",
-                "tags": [
-                    "testTag1",
-                    "testTag3"
-                ],
-            },
-            {
-                "description": "Time Entry 6",
-                "tags": [
-                    "testTag1",
-                    "testTag3"
-                ],
-            },
-
-        ],
-        "colors": ["#962752", "#dab827", "#f26e6b", "#171717", "#375359", "#29e5af", "#7b47ba"]
-    }
 }
-
+settings = {}
+function fetchSettings() {
+    return fetch("/settings.json")
+        .then(resp => resp.json())
+        .then(json => settings = json)
+}
 currentTask = null;
-tasks = getSettings().tasks;
 
 function getTasks() {
-    return tasks;
+    return getSettings().tasks;;
 }
 
 function createTiles() {
@@ -220,9 +176,9 @@ function stopSync() {
 //TODO check duplicate tasks in settings
 
 window.onload = function () {
-    createTiles();
-    // sync().then(_ => clicksDisabled = false);//Hacky solution to prevent operation till synced once
-    startSync();
+    fetchSettings()
+        .then(_ => createTiles())
+        .then(_ => startSync())
 }
 
 

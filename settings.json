@@ -3,56 +3,52 @@
     "wid": 0,
     "tasks": [
         {
-            "description": "Toggle Client",
+            "description": "Time Entry 1",
             "tags": [
                 "testTag1"
-            ],
+            ]
         },
         {
             "description": "Time Entry 2",
             "tags": [
                 "testTag1",
-                "testTag3"
-            ],
+                "testTag4"
+            ]
         },
         {
-            "description": "Time Entry 2",
+            "description": "Time Entry 3",
             "tags": [
-                "testTag1",
-                "testTag3"
-            ],
+                "testTag5",
+                "testTag6"
+            ]
         },
         {
-            "description": "Time Entry 2",
+            "description": "Time Entry 4",
             "tags": [
                 "testTag1",
-                "testTag3"
-            ],
+                "testTag4"
+            ]
         },
         {
-            "description": "Time Entry 2",
+            "description": "Time Entry 5",
             "tags": [
-                "testTag1",
                 "testTag3"
-            ],
+            ]
         },
         {
-            "description": "Time Entry 2",
-            "tags": [
-                "testTag1",
-                "testTag3"
-            ],
+            "description": "Time Entry 6"
         },
         {
-            "description": "Time Entry 7",
-            "tags": [
-                "testTag1",
-                "testTag3"
-            ],
-        },
+            "description": "Time Entry 7"
+        }
     ],
     "colors": [
         "#962752",
-        "#dab827"
+        "#dab827",
+        "#f26e6b",
+        "#171717",
+        "#375359",
+        "#29e5af",
+        "#7b47ba"
     ]
 }
