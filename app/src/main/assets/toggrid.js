@@ -1,23 +1,32 @@
+settings = {}
+currentTask = null;
+const settingsUrl = "https://gist.githubusercontent.com/mjaseem/a431be26cef5a6959417e56b83e62e2e/raw?ver=" + Date.now() //Cache bust
+
 function getSettings() {
     return settings;
 
 }
-settings = {}
-const settingsUrl = "https://gist.githubusercontent.com/mjaseem/a431be26cef5a6959417e56b83e62e2e/raw?ver=" + Date.now() //Cache bust
+
 function fetchSettings() {
-    return fetchWithTimeout(settingsUrl, 2000)
+    return fetchWithTimeout(settingsUrl, 1500)
         .then(resp => resp.json())
-        .then(json => {
-            settings = json;
-            console.log("Loaded settings " + JSON.stringify(json));
+        .then(fetchedSettings => {
+            Cache.setSettings(JSON.stringify(fetchedSettings));
+            return fetchedSettings;
+        })
+        .catch(err => {
+            console.log("Couldn't fetch settings from server due to " + err + ". Fetching from Cache.");
+            return JSON.parse(Cache.getSettings());
+        })
+        .then(fetchedSettings => {
+            settings = fetchedSettings;
+            console.log("Loaded settings : " + JSON.stringify(fetchedSettings));
         })
         .catch(err => {
             console.log(err);
             alert("Couldn't load settings from either sources.");
         });
 }
-currentTask = null;
-
 
 function fetchWithTimeout(url, timeout = 1500, options) {
     return Promise.race([
@@ -27,7 +36,6 @@ function fetchWithTimeout(url, timeout = 1500, options) {
         )
     ]);
 }
-
 
 function getTasks() {
     return getSettings().tasks;;
@@ -193,7 +201,6 @@ window.onload = function () {
         .then(_ => createTiles())
         .then(_ => startSync())
 }
-
 
 function sync() {
     return getCurrentTimeEntry()

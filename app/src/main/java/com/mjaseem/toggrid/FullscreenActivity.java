@@ -1,12 +1,14 @@
 package com.mjaseem.toggrid;
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.ConsoleMessage;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -45,6 +47,7 @@ public class FullscreenActivity extends AppCompatActivity {
             }
         });
         webView.addJavascriptInterface(new Config(), "Config");
+        webView.addJavascriptInterface(new Cache(), "Cache");
 
         webView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -53,6 +56,22 @@ public class FullscreenActivity extends AppCompatActivity {
 //                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE //Uncomment to hide action bar
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
+    }
+
+
+    private class Cache {
+        @JavascriptInterface
+        public String getSettings() {
+            return getPreferences(MODE_PRIVATE).getString(getString(R.string.settings), "");
+        }
+
+        @JavascriptInterface
+        public void setSettings(String settings) {
+            Log.d("WebView", "Settings stored to cache " + settings);
+            SharedPreferences.Editor edit = getPreferences(MODE_PRIVATE).edit();
+            edit.putString(getString(R.string.settings), settings);
+            edit.apply();
+        }
     }
 
     @Override
