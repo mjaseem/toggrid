@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Toggrid</string>
+
+    <string name="title">Toggrid</string>
+    <string name="refresh">Refresh</string>
+    <string name="settings">settings</string>
+</resources>
