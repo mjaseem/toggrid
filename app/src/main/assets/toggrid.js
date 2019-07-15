@@ -1,5 +1,6 @@
-settings = {}
+settings = {};
 currentTask = null;
+syncJob = null;
 const settingsUrl = "https://gist.githubusercontent.com/mjaseem/a431be26cef5a6959417e56b83e62e2e/raw?ver=" + Date.now() //Cache bust
 
 function getSettings() {
@@ -80,14 +81,16 @@ function debounce(fnReturningPromise) { //This will lead to error if called with
 function toggleTask(task) {
     stopSync();
     return getCurrentTimeEntry()
-        .then(function (resp) {
+        .then(function (resp) { //TODO check for duplicate logic with sync
             const data = resp.data;
-            if (data != null && currentTask == null && data.description == task.description) {
+            if (!isStateOfTaskConsistent(task, data)) {
                 console.info("Inconsistent state when clicked. Ignoring.")
                 return;
             }
+            //Start tile immediately so that UI is responsive
             if (data != null && task.description == data.description) {
                 stopTile(task.tile)
+                currentTask = null;
                 return stopTimeEntry(data.id);
             } else {
                 if (currentTask != null) {
@@ -98,6 +101,16 @@ function toggleTask(task) {
                 return startTask(task)
             }
         }).then(_ => startSync());
+}
+
+function isStateOfTaskConsistent(task, taskOnToggl) {
+    const startedLocally = currentTask != null && task.description === currentTask.description;
+
+    if (startedLocally) {
+        return taskOnToggl != null && taskOnToggl.description === task.description; //toggl aggrees task is started
+    } else {
+        return taskOnToggl == null || taskOnToggl.description !== task.description //toggl agrees this task is not started
+    }
 }
 
 function updateDuration(tile, dur) {
@@ -160,16 +173,16 @@ function getCurrentTimeEntry() {
 
 function polling(fn, predicate, delay, name) {
     const self = this;
-    self.cancelled = false;
+    self.stopped = true;
     console.debug("Started polling " + name);
     const scheduleNext = function () {
         setTimeout(() => {
-            if (self.cancelled) {
-                console.debug(name + " cancelled");
+            if (self.stopped) {
+                console.debug(name + " stopped");
                 return;
             }
-            console.debug("Not cancelled. Running " + name);
-            result = fn();
+            console.debug("Not stopped. Running " + name);
+            result = fn(self);
             if (predicate(result)) {
                 console.debug("Predicate passed. Scheduling " + name);
                 scheduleNext();
@@ -178,19 +191,28 @@ function polling(fn, predicate, delay, name) {
             }
         }, delay);
     }
-    self.cancel = () => self.cancelled = true;
-    scheduleNext();
+    self.stop = () => self.stopped = true;
+    self.start = function () {
+        if (self.stopped) {
+            self.stopped = false;
+            scheduleNext();
+        }
+    }
 }
 
 
 function startSync() {
-    syncJob = new polling(sync, _ => true, 1000, "sync");
-}
-function stopSync() {
-    syncJob.cancel();
+    if (syncJob == null) {
+        syncJob = new polling(sync, _ => true, 1000, "sync");
+    }
+    syncJob.start()
 }
 
-//TODO handle short period inconsistencies
+function stopSync() {
+    syncJob.stop();
+}
+
+
 //TODO more responsive to input
 //TODO polish the UI
 //TODO js equals null !== or !=?
@@ -202,9 +224,16 @@ window.onload = function () {
         .then(_ => startSync())
 }
 
-function sync() {
+function sync(polling) {
     return getCurrentTimeEntry()
         .then(function (currentTimeEntry) {
+            /* When stopSync is called, current sync will continue to execute. 
+            This check prevents the running sync from having any effect after stopping  */
+            if (polling.stopped) {
+                console.debug("Polling already stopped.")
+                return;
+            }
+
             currentData = currentTimeEntry.data;
             if (currentTask !== null && (currentData == null || currentData.description !== currentTask.description)) {
                 stopTile(currentTask.tile);
