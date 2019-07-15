@@ -15,15 +15,15 @@ function fetchSettings() {
             return fetchedSettings;
         })
         .catch(err => {
-            console.log("Couldn't fetch settings from server due to " + err + ". Fetching from Cache.");
+            console.error("Couldn't fetch settings from server due to " + err + ". Fetching from Cache.");
             return JSON.parse(Cache.getSettings());
         })
         .then(fetchedSettings => {
             settings = fetchedSettings;
-            console.log("Loaded settings : " + JSON.stringify(fetchedSettings));
+            console.debug("Loaded settings : " + JSON.stringify(fetchedSettings));
         })
         .catch(err => {
-            console.log(err);
+            console.error(err);
             alert("Couldn't load settings from either sources.");
         });
 }
@@ -83,7 +83,7 @@ function toggleTask(task) {
         .then(function (resp) {
             const data = resp.data;
             if (data != null && currentTask == null && data.description == task.description) {
-                console.log("Inconsistent state when clicked. Ignoring.")
+                console.info("Inconsistent state when clicked. Ignoring.")
                 return;
             }
             if (data != null && task.description == data.description) {
@@ -133,7 +133,7 @@ function startTimeEntry(timeEntry) {
         }
         return resp.json();
     }).then(json => {
-        console.log("Started " + json.data.id);
+        console.debug("Started " + json.data.id);
         currentTimeEntry = json.data;
         return json;
     });
@@ -145,10 +145,10 @@ function stopTimeEntry(id) {
         headers: defaultHeaders()
     }).then(resp => {
         if (resp.status === 409) {
-            console.log("Entry " + id + " already stopped");
+            console.info("Entry " + id + " already stopped. Duplicate call ignored by server");
             return;
         }
-        console.log("Stopped " + id);
+        console.debug("Stopped " + id);
     });
 }
 
@@ -161,20 +161,20 @@ function getCurrentTimeEntry() {
 function polling(fn, predicate, delay, name) {
     const self = this;
     self.cancelled = false;
-    console.log("Started polling " + name);
+    console.debug("Started polling " + name);
     const scheduleNext = function () {
         setTimeout(() => {
             if (self.cancelled) {
-                console.log(name + " cancelled");
+                console.debug(name + " cancelled");
                 return;
             }
-            console.log("Not cancelled. Running " + name);
+            console.debug("Not cancelled. Running " + name);
             result = fn();
             if (predicate(result)) {
-                console.log("Predicate passed. Scheduling " + name);
+                console.debug("Predicate passed. Scheduling " + name);
                 scheduleNext();
             } else {
-                console.log("Predicate failed. Stopping" + name);
+                console.debug("Predicate failed. Stopping" + name);
             }
         }, delay);
     }
