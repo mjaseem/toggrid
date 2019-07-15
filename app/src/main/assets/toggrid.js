@@ -88,12 +88,12 @@ function toggleTask(task) {
                 return;
             }
             //Start tile immediately so that UI is responsive
-            if (data != null && task.description == data.description) {
+            if (data !== null && task.description === data.description) {
                 stopTile(task.tile)
                 currentTask = null;
                 return stopTimeEntry(data.id);
             } else {
-                if (currentTask != null) {
+                if (currentTask !== null) {
                     stopTile(currentTask.tile);
                 }
                 currentTask = task;
@@ -104,12 +104,12 @@ function toggleTask(task) {
 }
 
 function isStateOfTaskConsistent(task, taskOnToggl) {
-    const startedLocally = currentTask != null && task.description === currentTask.description;
+    const startedLocally = currentTask !== null && task.description === currentTask.description;
 
     if (startedLocally) {
-        return taskOnToggl != null && taskOnToggl.description === task.description; //toggl aggrees task is started
+        return taskOnToggl !== null && taskOnToggl.description === task.description; //toggl aggrees task is started
     } else {
-        return taskOnToggl == null || taskOnToggl.description !== task.description //toggl agrees this task is not started
+        return taskOnToggl === null || taskOnToggl.description !== task.description //toggl agrees this task is not started
     }
 }
 
@@ -202,7 +202,7 @@ function polling(fn, predicate, delay, name) {
 
 
 function startSync() {
-    if (syncJob == null) {
+    if (syncJob === null) {
         syncJob = new polling(sync, _ => true, 1000, "sync");
     }
     syncJob.start()
@@ -235,7 +235,7 @@ function sync(polling) {
             }
 
             currentData = currentTimeEntry.data;
-            if (currentTask !== null && (currentData == null || currentData.description !== currentTask.description)) {
+            if (currentTask !== null && (currentData === null || currentData.description !== currentTask.description)) {
                 stopTile(currentTask.tile);
                 currentTask = null;
             }
@@ -257,7 +257,7 @@ function stopTile(tile) {
 }
 
 function findMatchingTask(data) {
-    return getTasks().filter(task => task.description == data.description)[0];
+    return getTasks().filter(task => task.description === data.description)[0];
 }
 function startTile(tile) {
     tile.style.filter = "grayscale(100%)";
@@ -279,4 +279,3 @@ function calculateDuration(data) {
 function twoDigits(xx) {
     return xx < 10 ? "0" + xx : xx
 }
-
